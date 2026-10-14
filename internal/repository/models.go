@@ -37,6 +37,14 @@ func (cm *pgCrewMembers) copyToModel() *internal.CrewMembers {
 	}
 }
 
+func (cm *pgCrewMembers) copyToModelOrNil() *internal.CrewMembers {
+	if cm == nil {
+		return nil
+	}
+
+	return cm.copyToModel()
+}
+
 type pgCrew struct {
 	Actors              *pgCrewMembers `json:"actor"`
 	CastingDirectors    *pgCrewMembers `json:"casting_director"`
@@ -51,16 +59,56 @@ type pgCrew struct {
 
 func (c *pgCrew) copyToModel() *internal.Crew {
 	return &internal.Crew{
-		Actors:              c.Actors.copyToModel(),
-		CastingDirectors:    c.CastingDirectors.copyToModel(),
-		Cinematographers:    c.Cinematographers.copyToModel(),
-		Composers:           c.Composers.copyToModel(),
-		Directors:           c.Directors.copyToModel(),
-		Editors:             c.Editors.copyToModel(),
-		Producers:           c.Producers.copyToModel(),
-		ProductionDesigners: c.ProductionDesigners.copyToModel(),
-		Writers:             c.Writers.copyToModel(),
+		Actors:              c.Actors.copyToModelOrNil(),
+		CastingDirectors:    c.CastingDirectors.copyToModelOrNil(),
+		Cinematographers:    c.Cinematographers.copyToModelOrNil(),
+		Composers:           c.Composers.copyToModelOrNil(),
+		Directors:           c.Directors.copyToModelOrNil(),
+		Editors:             c.Editors.copyToModelOrNil(),
+		Producers:           c.Producers.copyToModelOrNil(),
+		ProductionDesigners: c.ProductionDesigners.copyToModelOrNil(),
+		Writers:             c.Writers.copyToModelOrNil(),
 	}
+}
+
+func (c *pgCrew) copyToModelOrNil() *internal.Crew {
+	if c == nil {
+		return nil
+	}
+
+	return c.copyToModel()
+}
+
+type pgRating struct {
+	Votes int64   `json:"votes"`
+	Value float32 `json:"value"`
+}
+
+func (r *pgRating) copyToModel() internal.Rating {
+	return internal.Rating{
+		Votes: r.Votes,
+		Value: r.Value,
+	}
+}
+
+type pgRatings struct {
+	Kp   pgRating `json:"kp"`
+	Imdb pgRating `json:"imdb"`
+}
+
+func (r *pgRatings) copyToModel() *internal.Ratings {
+	return &internal.Ratings{
+		Kp:   r.Kp.copyToModel(),
+		Imdb: r.Imdb.copyToModel(),
+	}
+}
+
+func (r *pgRatings) copyToModelOrNil() *internal.Ratings {
+	if r == nil {
+		return nil
+	}
+
+	return r.copyToModel()
 }
 
 type pgMovie struct {
@@ -79,6 +127,7 @@ type pgMovie struct {
 	GenreIds         []int32     `db:"genre_ids"`
 	KpId             pgtype.Int4 `db:"kp_id"`
 	ImdbId           pgtype.Int4 `db:"imdb_id"`
+	Ratings          *pgRatings  `db:"ratings"`
 	Crew             *pgCrew     `db:"crew"`
 }
 
@@ -114,6 +163,7 @@ func (m *pgMovie) copyToModel() *internal.Movie {
 		GenreIds:         genreIds,
 		KpId:             m.KpId.Int32,
 		ImdbId:           m.ImdbId.Int32,
-		Crew:             m.Crew.copyToModel(),
+		Ratings:          m.Ratings.copyToModelOrNil(),
+		Crew:             m.Crew.copyToModelOrNil(),
 	}
 }
