@@ -19,3 +19,7 @@ func New(repo repository.Repository) *Service {
 func (s *Service) GetMovieById(ctx context.Context, id int64) (*internal.Movie, error) {
 	return s.repo.GetMovieById(ctx, id)
 }
+
+func (s *Service) GetSuggestions(ctx context.Context, query string) ([]*internal.MovieSuggestion, error) {
+	return s.repo.GetSuggestions(ctx, query)
+}

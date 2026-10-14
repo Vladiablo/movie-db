@@ -6,6 +6,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+func pgInt4ToInt32Ptr(pgInt pgtype.Int4) *int32 {
+	if !pgInt.Valid {
+		return nil
+	}
+
+	return new(pgInt.Int32)
+}
+
+func copySlice[T any](slice []T) []T {
+	if slice == nil {
+		return nil
+	}
+
+	newSlice := make([]T, len(slice))
+	copy(newSlice, slice)
+
+	return newSlice
+}
+
 type pgPerson struct {
 	Id          int32  `json:"id"`
 	Name        string `json:"name"`
@@ -132,21 +151,6 @@ type pgMovie struct {
 }
 
 func (m *pgMovie) copyToModel() *internal.Movie {
-	runtime := (*int32)(nil)
-	if m.Runtime.Valid {
-		runtime = new(m.Runtime.Int32)
-	}
-
-	yearFrom := (*int32)(nil)
-	if m.YearFrom.Valid {
-		yearFrom = new(m.YearFrom.Int32)
-	}
-
-	genreIds := make([]int32, len(m.GenreIds))
-	for i := range genreIds {
-		genreIds[i] = m.GenreIds[i]
-	}
-
 	return &internal.Movie{
 		Id:               m.Id,
 		Type:             m.Type,
@@ -156,14 +160,54 @@ func (m *pgMovie) copyToModel() *internal.Movie {
 		ShortDescription: m.ShortDescription.String,
 		Tagline:          m.Tagline.String,
 		AgeRating:        m.AgeRating.String,
-		Runtime:          runtime,
-		YearFrom:         yearFrom,
+		Runtime:          pgInt4ToInt32Ptr(m.Runtime),
+		YearFrom:         pgInt4ToInt32Ptr(m.YearFrom),
 		ReleaseDate:      internal.Date{Time: m.ReleaseDate.Time},
 		LatestAirDate:    internal.Date{Time: m.LatestAirDate.Time},
-		GenreIds:         genreIds,
+		GenreIds:         copySlice(m.GenreIds),
 		KpId:             m.KpId.Int32,
 		ImdbId:           m.ImdbId.Int32,
 		Ratings:          m.Ratings.copyToModelOrNil(),
 		Crew:             m.Crew.copyToModelOrNil(),
+	}
+}
+
+type pgMovieSuggestion struct {
+	Id               int32       `db:"id"`
+	Type             string      `db:"type"`
+	Status           string      `db:"status"`
+	Title            string      `db:"title"`
+	Description      pgtype.Text `db:"description"`
+	ShortDescription pgtype.Text `db:"short_description"`
+	Tagline          pgtype.Text `db:"tagline"`
+	AgeRating        pgtype.Text `db:"age_rating"`
+	Runtime          pgtype.Int4 `db:"runtime"`
+	YearFrom         pgtype.Int4 `db:"year_from"`
+	ReleaseDate      pgtype.Date `db:"release_date"`
+	LatestAirDate    pgtype.Date `db:"latest_air_date"`
+	GenreIds         []int32     `db:"genre_ids"`
+	KpId             pgtype.Int4 `db:"kp_id"`
+	ImdbId           pgtype.Int4 `db:"imdb_id"`
+	Ratings          *pgRatings  `db:"ratings"`
+}
+
+func (ms *pgMovieSuggestion) copyToModel() *internal.MovieSuggestion {
+	return &internal.MovieSuggestion{
+		Id:               ms.Id,
+		Type:             ms.Type,
+		Status:           ms.Status,
+		Title:            ms.Title,
+		Description:      ms.Description.String,
+		ShortDescription: ms.ShortDescription.String,
+		Tagline:          ms.Tagline.String,
+		AgeRating:        ms.AgeRating.String,
+		Runtime:          pgInt4ToInt32Ptr(ms.Runtime),
+		YearFrom:         pgInt4ToInt32Ptr(ms.YearFrom),
+		ReleaseDate:      internal.Date{Time: ms.ReleaseDate.Time},
+		LatestAirDate:    internal.Date{Time: ms.LatestAirDate.Time},
+		GenreIds:         copySlice(ms.GenreIds),
+		KpId:             ms.KpId.Int32,
+		ImdbId:           ms.ImdbId.Int32,
+		Ratings:          ms.Ratings.copyToModelOrNil(),
 	}
 }
