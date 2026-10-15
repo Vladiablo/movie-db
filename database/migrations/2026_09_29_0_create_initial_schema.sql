@@ -116,10 +116,6 @@ CREATE TABLE IF NOT EXISTS movies_crew (
     UNIQUE (movie_id, person_id, role)
 );
 
-ALTER TABLE movies_crew
-ALTER COLUMN role TYPE role_type USING role::role_type;
-
-
 /*
 CREATE TABLE IF NOT EXISTS networks (
     id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
