@@ -98,38 +98,6 @@ func (c *pgCrew) copyToModelOrNil() *internal.Crew {
 	return c.copyToModel()
 }
 
-type pgRating struct {
-	Votes int64   `json:"votes"`
-	Value float32 `json:"value"`
-}
-
-func (r *pgRating) copyToModel() internal.Rating {
-	return internal.Rating{
-		Votes: r.Votes,
-		Value: r.Value,
-	}
-}
-
-type pgRatings struct {
-	Kp   pgRating `json:"kp"`
-	Imdb pgRating `json:"imdb"`
-}
-
-func (r *pgRatings) copyToModel() *internal.Ratings {
-	return &internal.Ratings{
-		Kp:   r.Kp.copyToModel(),
-		Imdb: r.Imdb.copyToModel(),
-	}
-}
-
-func (r *pgRatings) copyToModelOrNil() *internal.Ratings {
-	if r == nil {
-		return nil
-	}
-
-	return r.copyToModel()
-}
-
 type pgMovie struct {
 	Id               int32       `db:"id"`
 	Type             string      `db:"type"`
@@ -146,8 +114,13 @@ type pgMovie struct {
 	GenreIds         []int32     `db:"genre_ids"`
 	KpId             pgtype.Int4 `db:"kp_id"`
 	ImdbId           pgtype.Int4 `db:"imdb_id"`
-	Ratings          *pgRatings  `db:"ratings"`
-	Crew             *pgCrew     `db:"crew"`
+
+	ImdbValue pgtype.Float4 `db:"imdb_value"`
+	ImdbVotes pgtype.Int8   `db:"imdb_votes"`
+	KpValue   pgtype.Float4 `db:"kp_value"`
+	KpVotes   pgtype.Int8   `db:"kp_votes"`
+
+	Crew *pgCrew `db:"crew"`
 }
 
 func (m *pgMovie) copyToModel() *internal.Movie {
@@ -167,8 +140,17 @@ func (m *pgMovie) copyToModel() *internal.Movie {
 		GenreIds:         copySlice(m.GenreIds),
 		KpId:             m.KpId.Int32,
 		ImdbId:           m.ImdbId.Int32,
-		Ratings:          m.Ratings.copyToModelOrNil(),
-		Crew:             m.Crew.copyToModelOrNil(),
+		Ratings: &internal.Ratings{
+			Kp: internal.Rating{
+				Value: m.KpValue.Float32,
+				Votes: m.KpVotes.Int64,
+			},
+			Imdb: internal.Rating{
+				Value: m.ImdbValue.Float32,
+				Votes: m.ImdbVotes.Int64,
+			},
+		},
+		Crew: m.Crew.copyToModelOrNil(),
 	}
 }
 
@@ -188,7 +170,11 @@ type pgMovieSuggestion struct {
 	GenreIds         []int32     `db:"genre_ids"`
 	KpId             pgtype.Int4 `db:"kp_id"`
 	ImdbId           pgtype.Int4 `db:"imdb_id"`
-	Ratings          *pgRatings  `db:"ratings"`
+
+	ImdbValue pgtype.Float4 `db:"imdb_value"`
+	ImdbVotes pgtype.Int8   `db:"imdb_votes"`
+	KpValue   pgtype.Float4 `db:"kp_value"`
+	KpVotes   pgtype.Int8   `db:"kp_votes"`
 }
 
 func (ms *pgMovieSuggestion) copyToModel() *internal.MovieSuggestion {
@@ -208,6 +194,15 @@ func (ms *pgMovieSuggestion) copyToModel() *internal.MovieSuggestion {
 		GenreIds:         copySlice(ms.GenreIds),
 		KpId:             ms.KpId.Int32,
 		ImdbId:           ms.ImdbId.Int32,
-		Ratings:          ms.Ratings.copyToModelOrNil(),
+		Ratings: &internal.Ratings{
+			Kp: internal.Rating{
+				Value: ms.KpValue.Float32,
+				Votes: ms.KpVotes.Int64,
+			},
+			Imdb: internal.Rating{
+				Value: ms.ImdbValue.Float32,
+				Votes: ms.ImdbVotes.Int64,
+			},
+		},
 	}
 }

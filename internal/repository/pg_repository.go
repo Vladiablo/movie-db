@@ -27,11 +27,14 @@ const dbTimeout = 10 * time.Second
 
 func (r *PgRepository) movieRepo() {}
 
+// TODO: add mat. view for top crew
 func (r *PgRepository) GetMovieById(ctx context.Context, id int64) (*internal.Movie, error) {
 	const sql = `
 SELECT m.id, m.type, m.status, m.title, m.description, m.short_description, m.tagline,
 	m.age_rating, m.runtime, m.year_from, m.release_date, m.latest_air_date, g.genre_ids,
-	m.kp_id, m.imdb_id, r.ratings, c.crew
+	m.kp_id, m.imdb_id,
+	mr.imdb_value, mr.imdb_votes, mr.kp_value, mr.kp_votes,
+	c.crew
 FROM
 	movies m
 	CROSS JOIN LATERAL (
@@ -39,20 +42,7 @@ FROM
 		FROM movies_genres
 		WHERE movie_id = m.id
 	) g
-	LEFT JOIN LATERAL (
-		SELECT jsonb_build_object(
-			'kp', jsonb_build_object(
-				'votes', kp_votes,
-				'value', kp_value
-			),
-			'imdb', jsonb_build_object(
-				'votes', imdb_votes,
-				'value', imdb_value
-			)
-		) AS ratings
-		FROM movies_ratings
-		WHERE movie_id = m.id
-	) r ON TRUE
+	LEFT JOIN movies_ratings mr ON mr.movie_id = m.id
 	CROSS JOIN LATERAL (
 		SELECT jsonb_object_agg(r,
 			jsonb_build_object(
@@ -84,7 +74,7 @@ FROM
 		) mcc
 		WHERE mcpa.objs IS NOT NULL
 	) c
-WHERE id = $1::int
+WHERE m.id = $1::int
 `
 
 	ctx, cancel := context.WithTimeout(ctx, dbTimeout)
@@ -122,7 +112,8 @@ func (r *PgRepository) GetSuggestions(ctx context.Context, query string) ([]*int
 	const sql = `
 SELECT m.id, m.type, m.status, m.title, m.description, m.short_description, m.tagline,
 	m.age_rating, m.runtime, m.year_from, m.release_date, m.latest_air_date, g.genre_ids,
-	m.kp_id, m.imdb_id, r.ratings
+	m.kp_id, m.imdb_id,
+	mr.imdb_value, mr.imdb_votes, mr.kp_value, mr.kp_votes
 FROM
     movies m
 	CROSS JOIN LATERAL (
@@ -130,21 +121,8 @@ FROM
 		FROM movies_genres
 		WHERE movie_id = m.id
 	) g
-	LEFT JOIN LATERAL (
-		SELECT jsonb_build_object(
-			'kp', jsonb_build_object(
-				'votes', kp_votes,
-				'value', kp_value
-			),
-			'imdb', jsonb_build_object(
-				'votes', imdb_votes,
-				'value', imdb_value
-			)
-		) AS ratings
-		FROM movies_ratings
-		WHERE movie_id = m.id
-	) r ON TRUE
-WHERE m.type != 'tv_episode' AND m.title % $1::text
+	LEFT JOIN movies_ratings mr ON mr.movie_id = m.id
+WHERE m.title % $1::text
 ORDER BY m.title <-> $1::text ASC
 LIMIT 10;
 `
