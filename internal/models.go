@@ -47,6 +47,10 @@ type Ratings struct {
 	Imdb Rating `json:"imdb,omitzero"`
 }
 
+func (r *Ratings) IsZero() bool {
+	return r.Kp.IsZero() && r.Imdb.IsZero()
+}
+
 type Movie struct {
 	Id               int32    `json:"id"`
 	Type             string   `json:"type"`
@@ -63,7 +67,7 @@ type Movie struct {
 	GenreIds         []int32  `json:"genre_ids,omitempty"`
 	KpId             int32    `json:"kp_id,omitempty"`
 	ImdbId           int32    `json:"imdb_id,omitempty"`
-	Ratings          *Ratings `json:"ratings,omitempty"`
+	Ratings          *Ratings `json:"ratings,omitzero"`
 	Crew             *Crew    `json:"crew,omitempty"`
 }
 
@@ -83,5 +87,5 @@ type MovieSuggestion struct {
 	GenreIds         []int32  `json:"genre_ids,omitempty"`
 	KpId             int32    `json:"kp_id,omitempty"`
 	ImdbId           int32    `json:"imdb_id,omitempty"`
-	Ratings          *Ratings `json:"ratings,omitempty"`
+	Ratings          *Ratings `json:"ratings,omitzero"`
 }
