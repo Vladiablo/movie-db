@@ -2,6 +2,7 @@ package repository
 
 import (
 	"movie-db/internal"
+	"movie-db/internal/helpers"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -12,17 +13,6 @@ func pgInt4ToInt32Ptr(pgInt pgtype.Int4) *int32 {
 	}
 
 	return new(pgInt.Int32)
-}
-
-func copySlice[T any](slice []T) []T {
-	if slice == nil {
-		return nil
-	}
-
-	newSlice := make([]T, len(slice))
-	copy(newSlice, slice)
-
-	return newSlice
 }
 
 type pgPerson struct {
@@ -115,10 +105,10 @@ type pgMovie struct {
 	KpId             pgtype.Int4 `db:"kp_id"`
 	ImdbId           pgtype.Int4 `db:"imdb_id"`
 
-	ImdbValue pgtype.Float4 `db:"imdb_value"`
-	ImdbVotes pgtype.Int8   `db:"imdb_votes"`
-	KpValue   pgtype.Float4 `db:"kp_value"`
 	KpVotes   pgtype.Int8   `db:"kp_votes"`
+	KpValue   pgtype.Float4 `db:"kp_value"`
+	ImdbVotes pgtype.Int8   `db:"imdb_votes"`
+	ImdbValue pgtype.Float4 `db:"imdb_value"`
 
 	Crew *pgCrew `db:"crew"`
 }
@@ -137,7 +127,7 @@ func (m *pgMovie) copyToModel() *internal.Movie {
 		YearFrom:         pgInt4ToInt32Ptr(m.YearFrom),
 		ReleaseDate:      internal.Date{Time: m.ReleaseDate.Time},
 		LatestAirDate:    internal.Date{Time: m.LatestAirDate.Time},
-		GenreIds:         copySlice(m.GenreIds),
+		GenreIds:         helpers.CopySlice(m.GenreIds),
 		KpId:             m.KpId.Int32,
 		ImdbId:           m.ImdbId.Int32,
 		Ratings: &internal.Ratings{
@@ -171,10 +161,10 @@ type pgMovieSuggestion struct {
 	KpId             pgtype.Int4 `db:"kp_id"`
 	ImdbId           pgtype.Int4 `db:"imdb_id"`
 
-	ImdbValue pgtype.Float4 `db:"imdb_value"`
-	ImdbVotes pgtype.Int8   `db:"imdb_votes"`
-	KpValue   pgtype.Float4 `db:"kp_value"`
 	KpVotes   pgtype.Int8   `db:"kp_votes"`
+	KpValue   pgtype.Float4 `db:"kp_value"`
+	ImdbVotes pgtype.Int8   `db:"imdb_votes"`
+	ImdbValue pgtype.Float4 `db:"imdb_value"`
 }
 
 func (ms *pgMovieSuggestion) copyToModel() *internal.MovieSuggestion {
@@ -191,7 +181,7 @@ func (ms *pgMovieSuggestion) copyToModel() *internal.MovieSuggestion {
 		YearFrom:         pgInt4ToInt32Ptr(ms.YearFrom),
 		ReleaseDate:      internal.Date{Time: ms.ReleaseDate.Time},
 		LatestAirDate:    internal.Date{Time: ms.LatestAirDate.Time},
-		GenreIds:         copySlice(ms.GenreIds),
+		GenreIds:         helpers.CopySlice(ms.GenreIds),
 		KpId:             ms.KpId.Int32,
 		ImdbId:           ms.ImdbId.Int32,
 		Ratings: &internal.Ratings{
