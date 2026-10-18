@@ -1,0 +1,415 @@
+basePath: /v1
+definitions:
+  http.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal.Crew:
+    description: Movie crew members separated by their role
+    properties:
+      actor:
+        $ref: '#/definitions/internal.CrewMembers'
+      casting_director:
+        $ref: '#/definitions/internal.CrewMembers'
+      cinematographer:
+        $ref: '#/definitions/internal.CrewMembers'
+      composer:
+        $ref: '#/definitions/internal.CrewMembers'
+      director:
+        $ref: '#/definitions/internal.CrewMembers'
+      editor:
+        $ref: '#/definitions/internal.CrewMembers'
+      producer:
+        $ref: '#/definitions/internal.CrewMembers'
+      production_designer:
+        $ref: '#/definitions/internal.CrewMembers'
+      writer:
+        $ref: '#/definitions/internal.CrewMembers'
+    type: object
+  internal.CrewMembers:
+    properties:
+      count:
+        description: Overall count of crew members
+        example: 10
+        type: integer
+      members:
+        description: Array with no more than five most important crew members
+        items:
+          $ref: '#/definitions/internal.Person'
+        type: array
+    type: object
+  internal.Movie:
+    description: Complete information about movie including most important crew members
+    properties:
+      age_rating:
+        description: Movie age rating
+        type: string
+      crew:
+        allOf:
+        - $ref: '#/definitions/internal.Crew'
+        description: Movie crew
+      description:
+        description: Movie description
+        type: string
+      genre_ids:
+        description: IDs of genres the movie belongs to
+        example:
+        - 12
+        - 15
+        - 16
+        items:
+          type: integer
+        type: array
+      id:
+        description: Movie ID
+        example: 12163543
+        type: integer
+      imdb_id:
+        description: Movie ID in IMDB database
+        example: 120737
+        type: integer
+      kp_id:
+        description: Movie ID in Kinopoisk database
+        example: 328
+        type: integer
+      latest_air_date:
+        description: Latest date on which series have been translated
+        example: "2001-12-19"
+        type: string
+      ratings:
+        allOf:
+        - $ref: '#/definitions/internal.Ratings'
+        description: Movie ratings
+      release_date:
+        description: Movie release date
+        example: "2001-12-19"
+        type: string
+      runtime:
+        description: Movie runtime in minutes
+        example: 178
+        type: integer
+      short_description:
+        description: Movie short description
+        type: string
+      status:
+        description: Movie production status
+        example: post_production
+        type: string
+      tagline:
+        description: Movie tagline
+        type: string
+      title:
+        description: Movie title
+        example: 'The Lord of the Rings: The Fellowship of the Ring'
+        type: string
+      type:
+        description: Movie type (movie or series)
+        example: movie
+        type: string
+      year_from:
+        description: Year the movie was first shown
+        example: 2001
+        type: integer
+    type: object
+  internal.MovieSuggestion:
+    description: Summary information about movie
+    properties:
+      age_rating:
+        description: Movie age rating
+        type: string
+      description:
+        description: Movie description
+        type: string
+      genre_ids:
+        description: IDs of genres the movie belongs to
+        example:
+        - 12
+        - 15
+        - 16
+        items:
+          type: integer
+        type: array
+      id:
+        description: Movie ID
+        example: 12163543
+        type: integer
+      imdb_id:
+        description: Movie ID in IMDB database
+        example: 120737
+        type: integer
+      kp_id:
+        description: Movie ID in Kinopoisk database
+        example: 328
+        type: integer
+      latest_air_date:
+        description: Latest date on which series have been translated
+        example: "2001-12-19"
+        type: string
+      ratings:
+        allOf:
+        - $ref: '#/definitions/internal.Ratings'
+        description: Movie ratings
+      release_date:
+        description: Movie release date
+        example: "2001-12-19"
+        type: string
+      runtime:
+        description: Movie runtime in minutes
+        example: 178
+        type: integer
+      short_description:
+        description: Movie short description
+        type: string
+      status:
+        description: Movie production status
+        example: post_production
+        type: string
+      tagline:
+        description: Movie tagline
+        type: string
+      title:
+        description: Movie title
+        example: 'The Lord of the Rings: The Fellowship of the Ring'
+        type: string
+      type:
+        description: Movie type (movie or series)
+        example: movie
+        type: string
+      year_from:
+        description: Year the movie was first shown
+        example: 2001
+        type: integer
+    type: object
+  internal.Person:
+    description: Information about crew member and their role
+    properties:
+      id:
+        description: Person ID
+        example: 15694579
+        type: integer
+      name:
+        description: Person name
+        example: Elijah Wood
+        type: string
+      role_details:
+        description: Additional role details
+        example: Frodo
+        type: string
+    type: object
+  internal.Rating:
+    description: Movie rating at given film aggregator
+    properties:
+      value:
+        description: Average rating
+        example: 8.9
+        type: number
+      votes:
+        description: Total number of votes
+        example: 2240637
+        type: integer
+    type: object
+  internal.Ratings:
+    description: Movie ratings at supported film aggregators
+    properties:
+      imdb:
+        allOf:
+        - $ref: '#/definitions/internal.Rating'
+        description: Movie rating at IMDB
+      kp:
+        allOf:
+        - $ref: '#/definitions/internal.Rating'
+        description: Movie rating at Kinopoisk
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact: {}
+  description: API to get movies and series information
+  title: Movie DB API
+  version: "1.0"
+paths:
+  /movies/{id}:
+    get:
+      description: Get movie by its ID
+      parameters:
+      - description: Movie ID
+        example: 12163543
+        format: int64
+        in: path
+        maximum: 2147483647
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal.Movie'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Get movie
+      tags:
+      - movies
+  /movies/search:
+    get:
+      description: Search movies by criteria
+      parameters:
+      - description: Movie type to search for
+        enum:
+        - movie
+        - series
+        example: movie
+        in: query
+        name: type
+        type: string
+      - description: Lower bound of the year range for searching movies
+        example: 1982
+        format: int32
+        in: query
+        maximum: 9999
+        minimum: 1
+        name: yearFrom
+        type: integer
+      - description: Upper bound of the year range for searching movies. Should be
+          greater or equal to yearFrom
+        example: 2024
+        format: int32
+        in: query
+        maximum: 9999
+        minimum: 1
+        name: yearTo
+        type: integer
+      - collectionFormat: csv
+        description: IDs of movie genres to search for
+        in: query
+        items:
+          format: int32
+          type: integer
+        name: genreIds
+        type: array
+      - description: Lower bound of the IMDB rating range for searching movies
+        example: 6
+        format: float32
+        in: query
+        maximum: 10
+        minimum: 1
+        name: imdbRatingFrom
+        type: number
+      - description: Upper bound of the IMDB rating range for searching movies. Should
+          be greater or equal to imdbRatingFrom
+        example: 9.3
+        format: float32
+        in: query
+        maximum: 10
+        minimum: 1
+        name: imdbRatingTo
+        type: number
+      - default: imdb_rating
+        description: Sorting key
+        enum:
+        - imdb_rating
+        - year_from
+        example: year_from
+        in: query
+        name: orderBy
+        type: string
+      - default: desc
+        description: Sorting direction
+        enum:
+        - asc
+        - desc
+        example: asc
+        in: query
+        name: orderDir
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal.MovieSuggestion'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Search movies
+      tags:
+      - movies
+  /movies/suggest:
+    get:
+      description: Suggest movies with title similar to search string
+      parameters:
+      - description: Search string
+        example: '"game of thrones"'
+        in: query
+        maxLength: 255
+        minLength: 2
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal.MovieSuggestion'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Get movie suggestions
+      tags:
+      - movies
+swagger: "2.0"

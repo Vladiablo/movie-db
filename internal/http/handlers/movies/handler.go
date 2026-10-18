@@ -53,6 +53,19 @@ func bindAndValidate(c *echo.Context, req any) error {
 	return nil
 }
 
+// GetMovieById
+//
+//	@Summary		Get movie
+//	@Description	Get movie by its ID
+//	@Tags			movies
+//	@Produce		json
+//	@Param			id	path		int64	true	"Movie ID"	Minimum(1)	Maximum(2147483647)	Example(12163543)
+//	@Success		200	{array}		internal.Movie
+//	@Failure		400	{object}	http.ErrorResponse
+//	@Failure		404	{object}	http.ErrorResponse
+//	@Failure		422	{object}	http.ErrorResponse
+//	@Failure		500	{object}	http.ErrorResponse
+//	@Router			/movies/{id} [get]
 func (s *Handler) GetMovieById(c *echo.Context) error {
 	var req GetMoviesRequest
 	if err := bindAndValidate(c, &req); err != nil {
@@ -76,6 +89,21 @@ func (s *Handler) GetMovieById(c *echo.Context) error {
 	return c.JSON(http.StatusOK, movie)
 }
 
+// GetSuggestions
+//
+//	@Summary		Get movie suggestions
+//	@Description	Suggest movies with title similar to search string
+//	@Tags			movies
+//	@Produce		json
+//	@Param			q	query		string	true	"Search string"	MinLength(2)	MaxLength(255)	Example("game of thrones")
+//	@Success		200	{array}		internal.MovieSuggestion
+//	@Failure		400	{object}	http.ErrorResponse
+//	@Failure		404	{object}	http.ErrorResponse
+//	@Failure		422	{object}	http.ErrorResponse
+//	@Failure		500	{object}	http.ErrorResponse
+//	@Router			/movies/suggest [get]
+//
+// TODO: order by rating
 func (s *Handler) GetSuggestions(c *echo.Context) error {
 	var req GetSuggestionsRequest
 	if err := bindAndValidate(c, &req); err != nil {
@@ -99,6 +127,27 @@ func (s *Handler) GetSuggestions(c *echo.Context) error {
 	return c.JSON(http.StatusOK, movies)
 }
 
+// SearchMovies
+//
+//	@Summary		Search movies
+//	@Description	Search movies by criteria
+//	@Tags			movies
+//	@Produce		json
+//	@Param			type			query		string	false	"Movie type to search for"																					Enums(movie, series)			Example(movie)
+//	@Param			yearFrom		query		int32	false	"Lower bound of the year range for searching movies"														Minimum(1)						Maximum(9999)	Example(1982)
+//	@Param			yearTo			query		int32	false	"Upper bound of the year range for searching movies. Should be greater or equal to yearFrom"				Minimum(1)						Maximum(9999)	Example(2024)
+//	@Param			genreIds		query		[]int32	false	"IDs of movie genres to search for"																			CollectionFormat(csv)			Example(12,15)
+//	@Param			imdbRatingFrom	query		float32	false	"Lower bound of the IMDB rating range for searching movies"													Minimum(1.0)					Maximum(10.0)			Example(6.0)
+//	@Param			imdbRatingTo	query		float32	false	"Upper bound of the IMDB rating range for searching movies. Should be greater or equal to imdbRatingFrom"	Minimum(1.0)					Maximum(10.0)			Example(9.3)
+//	@Param			orderBy			query		string	false	"Sorting key"																								Enums(imdb_rating, year_from)	Default(imdb_rating)	Example(year_from)
+//	@Param			orderDir		query		string	false	"Sorting direction"																							Enums(asc, desc)				Default(desc)			Example(asc)
+//	@Success		200				{array}		internal.MovieSuggestion
+//	@Failure		400				{object}	http.ErrorResponse
+//	@Failure		404				{object}	http.ErrorResponse
+//	@Failure		422				{object}	http.ErrorResponse
+//	@Failure		500				{object}	http.ErrorResponse
+//	@Router			/movies/search [get]
+//
 // TODO: with pagination
 func (s *Handler) SearchMovies(c *echo.Context) error {
 	var req SearchMoviesRequest
