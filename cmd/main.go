@@ -22,6 +22,16 @@ const (
 	dbConnTimeout  = 10 * time.Second
 )
 
+//	@title			Movie DB API
+//	@version		1.0
+//	@description	API to get movies and series information
+
+//	@host		localhost:8080
+//	@BasePath	/v1
+
+//	@externalDocs.description	OpenAPI
+//	@externalDocs.url			https://swagger.io/resources/open-api/
+
 func run() int {
 	const shutdownTimeout = 10 * time.Second
 
@@ -51,18 +61,17 @@ func run() int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	repo := repository.NewPgRepository(pool,
-		logger.With(slog.String("component", "pg-repo")),
-	)
+	repo := repository.NewPgRepository(pool)
 
-	svc := service.New(repo)
+	svc := service.New(repo,
+		logger.With(slog.String("component", "service")),
+	)
 
 	srv := http.NewServer(httpServerAddr,
 		logger.With(slog.String("component", "http-server")),
 	)
 
-	handlersLogger := logger.With(slog.String("component", "http"))
-	moviesHandler := movies.New(svc, handlersLogger)
+	moviesHandler := movies.New(svc)
 	http.RegisterRoutes(srv, moviesHandler)
 
 	var wg sync.WaitGroup

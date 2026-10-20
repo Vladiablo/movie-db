@@ -2,40 +2,23 @@ package repository
 
 import (
 	"movie-db/internal"
+	"slices"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgtype/zeronull"
 )
 
-func pgInt4ToInt32Ptr(pgInt pgtype.Int4) *int32 {
-	if !pgInt.Valid {
-		return nil
-	}
-
-	return new(pgInt.Int32)
-}
-
-func copySlice[T any](slice []T) []T {
-	if slice == nil {
-		return nil
-	}
-
-	newSlice := make([]T, len(slice))
-	copy(newSlice, slice)
-
-	return newSlice
-}
-
 type pgPerson struct {
-	Id          int32  `json:"id"`
-	Name        string `json:"name"`
-	RoleDetails string `json:"role_details"`
+	Id          int32         `json:"id"`
+	Name        string        `json:"name"`
+	RoleDetails zeronull.Text `json:"role_details"`
 }
 
-func (p *pgPerson) copyToModel() *internal.Person {
+func (p *pgPerson) toModel() *internal.Person {
 	return &internal.Person{
 		Id:          p.Id,
 		Name:        p.Name,
-		RoleDetails: p.RoleDetails,
+		RoleDetails: string(p.RoleDetails),
 	}
 }
 
@@ -44,24 +27,20 @@ type pgCrewMembers struct {
 	Members []*pgPerson `json:"members"`
 }
 
-func (cm *pgCrewMembers) copyToModel() *internal.CrewMembers {
+func (cm *pgCrewMembers) toModel() *internal.CrewMembers {
+	if cm == nil {
+		return nil
+	}
+
 	modelMembers := make([]*internal.Person, len(cm.Members))
 	for i := range modelMembers {
-		modelMembers[i] = cm.Members[i].copyToModel()
+		modelMembers[i] = cm.Members[i].toModel()
 	}
 
 	return &internal.CrewMembers{
 		Count:   cm.Count,
 		Members: modelMembers,
 	}
-}
-
-func (cm *pgCrewMembers) copyToModelOrNil() *internal.CrewMembers {
-	if cm == nil {
-		return nil
-	}
-
-	return cm.copyToModel()
 }
 
 type pgCrew struct {
@@ -76,138 +55,86 @@ type pgCrew struct {
 	Writers             *pgCrewMembers `json:"writer"`
 }
 
-func (c *pgCrew) copyToModel() *internal.Crew {
-	return &internal.Crew{
-		Actors:              c.Actors.copyToModelOrNil(),
-		CastingDirectors:    c.CastingDirectors.copyToModelOrNil(),
-		Cinematographers:    c.Cinematographers.copyToModelOrNil(),
-		Composers:           c.Composers.copyToModelOrNil(),
-		Directors:           c.Directors.copyToModelOrNil(),
-		Editors:             c.Editors.copyToModelOrNil(),
-		Producers:           c.Producers.copyToModelOrNil(),
-		ProductionDesigners: c.ProductionDesigners.copyToModelOrNil(),
-		Writers:             c.Writers.copyToModelOrNil(),
-	}
-}
-
-func (c *pgCrew) copyToModelOrNil() *internal.Crew {
+func (c *pgCrew) toModel() *internal.Crew {
 	if c == nil {
 		return nil
 	}
 
-	return c.copyToModel()
-}
-
-type pgRating struct {
-	Votes int64   `json:"votes"`
-	Value float32 `json:"value"`
-}
-
-func (r *pgRating) copyToModel() internal.Rating {
-	return internal.Rating{
-		Votes: r.Votes,
-		Value: r.Value,
+	return &internal.Crew{
+		Actors:              c.Actors.toModel(),
+		CastingDirectors:    c.CastingDirectors.toModel(),
+		Cinematographers:    c.Cinematographers.toModel(),
+		Composers:           c.Composers.toModel(),
+		Directors:           c.Directors.toModel(),
+		Editors:             c.Editors.toModel(),
+		Producers:           c.Producers.toModel(),
+		ProductionDesigners: c.ProductionDesigners.toModel(),
+		Writers:             c.Writers.toModel(),
 	}
 }
 
-type pgRatings struct {
-	Kp   pgRating `json:"kp"`
-	Imdb pgRating `json:"imdb"`
+type pgMovieBase struct {
+	Id               int32         `db:"id"`
+	Type             string        `db:"type"`
+	Status           string        `db:"status"`
+	Title            string        `db:"title"`
+	Description      zeronull.Text `db:"description"`
+	ShortDescription zeronull.Text `db:"short_description"`
+	Tagline          zeronull.Text `db:"tagline"`
+	AgeRating        zeronull.Text `db:"age_rating"`
+	Runtime          zeronull.Int4 `db:"runtime"`
+	YearFrom         zeronull.Int4 `db:"year_from"`
+	ReleaseDate      pgtype.Date   `db:"release_date"`
+	LatestAirDate    pgtype.Date   `db:"latest_air_date"`
+	GenreIds         []int32       `db:"genre_ids"`
+	KpId             zeronull.Int4 `db:"kp_id"`
+	ImdbId           zeronull.Int4 `db:"imdb_id"`
+
+	KpVotes   zeronull.Int8 `db:"kp_votes"`
+	KpValue   pgtype.Float4 `db:"kp_value"`
+	ImdbVotes zeronull.Int8 `db:"imdb_votes"`
+	ImdbValue pgtype.Float4 `db:"imdb_value"`
 }
 
-func (r *pgRatings) copyToModel() *internal.Ratings {
-	return &internal.Ratings{
-		Kp:   r.Kp.copyToModel(),
-		Imdb: r.Imdb.copyToModel(),
-	}
-}
-
-func (r *pgRatings) copyToModelOrNil() *internal.Ratings {
-	if r == nil {
-		return nil
-	}
-
-	return r.copyToModel()
-}
-
-type pgMovie struct {
-	Id               int32       `db:"id"`
-	Type             string      `db:"type"`
-	Status           string      `db:"status"`
-	Title            string      `db:"title"`
-	Description      pgtype.Text `db:"description"`
-	ShortDescription pgtype.Text `db:"short_description"`
-	Tagline          pgtype.Text `db:"tagline"`
-	AgeRating        pgtype.Text `db:"age_rating"`
-	Runtime          pgtype.Int4 `db:"runtime"`
-	YearFrom         pgtype.Int4 `db:"year_from"`
-	ReleaseDate      pgtype.Date `db:"release_date"`
-	LatestAirDate    pgtype.Date `db:"latest_air_date"`
-	GenreIds         []int32     `db:"genre_ids"`
-	KpId             pgtype.Int4 `db:"kp_id"`
-	ImdbId           pgtype.Int4 `db:"imdb_id"`
-	Ratings          *pgRatings  `db:"ratings"`
-	Crew             *pgCrew     `db:"crew"`
-}
-
-func (m *pgMovie) copyToModel() *internal.Movie {
-	return &internal.Movie{
-		Id:               m.Id,
-		Type:             m.Type,
-		Status:           m.Status,
-		Title:            m.Title,
-		Description:      m.Description.String,
-		ShortDescription: m.ShortDescription.String,
-		Tagline:          m.Tagline.String,
-		AgeRating:        m.AgeRating.String,
-		Runtime:          pgInt4ToInt32Ptr(m.Runtime),
-		YearFrom:         pgInt4ToInt32Ptr(m.YearFrom),
-		ReleaseDate:      internal.Date{Time: m.ReleaseDate.Time},
-		LatestAirDate:    internal.Date{Time: m.LatestAirDate.Time},
-		GenreIds:         copySlice(m.GenreIds),
-		KpId:             m.KpId.Int32,
-		ImdbId:           m.ImdbId.Int32,
-		Ratings:          m.Ratings.copyToModelOrNil(),
-		Crew:             m.Crew.copyToModelOrNil(),
-	}
-}
-
-type pgMovieSuggestion struct {
-	Id               int32       `db:"id"`
-	Type             string      `db:"type"`
-	Status           string      `db:"status"`
-	Title            string      `db:"title"`
-	Description      pgtype.Text `db:"description"`
-	ShortDescription pgtype.Text `db:"short_description"`
-	Tagline          pgtype.Text `db:"tagline"`
-	AgeRating        pgtype.Text `db:"age_rating"`
-	Runtime          pgtype.Int4 `db:"runtime"`
-	YearFrom         pgtype.Int4 `db:"year_from"`
-	ReleaseDate      pgtype.Date `db:"release_date"`
-	LatestAirDate    pgtype.Date `db:"latest_air_date"`
-	GenreIds         []int32     `db:"genre_ids"`
-	KpId             pgtype.Int4 `db:"kp_id"`
-	ImdbId           pgtype.Int4 `db:"imdb_id"`
-	Ratings          *pgRatings  `db:"ratings"`
-}
-
-func (ms *pgMovieSuggestion) copyToModel() *internal.MovieSuggestion {
-	return &internal.MovieSuggestion{
+func (ms *pgMovieBase) toModel() *internal.MovieBase {
+	return &internal.MovieBase{
 		Id:               ms.Id,
 		Type:             ms.Type,
 		Status:           ms.Status,
 		Title:            ms.Title,
-		Description:      ms.Description.String,
-		ShortDescription: ms.ShortDescription.String,
-		Tagline:          ms.Tagline.String,
-		AgeRating:        ms.AgeRating.String,
-		Runtime:          pgInt4ToInt32Ptr(ms.Runtime),
-		YearFrom:         pgInt4ToInt32Ptr(ms.YearFrom),
+		Description:      string(ms.Description),
+		ShortDescription: string(ms.ShortDescription),
+		Tagline:          string(ms.Tagline),
+		AgeRating:        string(ms.AgeRating),
+		Runtime:          int32(ms.Runtime),
+		YearFrom:         int32(ms.YearFrom),
 		ReleaseDate:      internal.Date{Time: ms.ReleaseDate.Time},
 		LatestAirDate:    internal.Date{Time: ms.LatestAirDate.Time},
-		GenreIds:         copySlice(ms.GenreIds),
-		KpId:             ms.KpId.Int32,
-		ImdbId:           ms.ImdbId.Int32,
-		Ratings:          ms.Ratings.copyToModelOrNil(),
+		GenreIds:         slices.Clone(ms.GenreIds),
+		KpId:             int32(ms.KpId),
+		ImdbId:           int32(ms.ImdbId),
+		Ratings: &internal.Ratings{
+			Kp: internal.Rating{
+				Value: ms.KpValue.Float32,
+				Votes: int64(ms.KpVotes),
+			},
+			Imdb: internal.Rating{
+				Value: ms.ImdbValue.Float32,
+				Votes: int64(ms.ImdbVotes),
+			},
+		},
+	}
+}
+
+type pgMovie struct {
+	pgMovieBase
+
+	Crew *pgCrew `db:"crew"`
+}
+
+func (m *pgMovie) toModel() *internal.Movie {
+	return &internal.Movie{
+		MovieBase: m.pgMovieBase.toModel(),
+		Crew:      m.Crew.toModel(),
 	}
 }
