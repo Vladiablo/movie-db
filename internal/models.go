@@ -66,47 +66,33 @@ func (r *Ratings) IsZero() bool {
 	return r.Kp.IsZero() && r.Imdb.IsZero()
 }
 
+// MovieBase model info
+//
+//	@Description	Summary information about movie
+type MovieBase struct {
+	Id               int32    `json:"id" example:"12163543"`                                                        // Movie ID
+	Type             string   `json:"type" example:"movie"`                                                         // Movie type (movie or series)
+	Status           string   `json:"status" example:"post_production"`                                             // Movie production status
+	Title            string   `json:"title" example:"The Lord of the Rings: The Fellowship of the Ring"`            // Movie title
+	Description      string   `json:"description,omitempty"`                                                        // Movie description
+	ShortDescription string   `json:"short_description,omitempty"`                                                  // Movie short description
+	Tagline          string   `json:"tagline,omitempty"`                                                            // Movie tagline
+	AgeRating        string   `json:"age_rating,omitempty"`                                                         // Movie age rating
+	Runtime          int32    `json:"runtime,omitempty" example:"178"`                                              // Movie runtime in minutes
+	YearFrom         int32    `json:"year_from,omitempty" example:"2001"`                                           // Year the movie was first shown
+	ReleaseDate      Date     `json:"release_date,omitzero" swaggertype:"primitive,string" example:"2001-12-19"`    // Movie release date
+	LatestAirDate    Date     `json:"latest_air_date,omitzero" swaggertype:"primitive,string" example:"2001-12-19"` // Latest date on which series have been translated
+	GenreIds         []int32  `json:"genre_ids,omitempty" example:"12,15,16"`                                       // IDs of genres the movie belongs to
+	KpId             int32    `json:"kp_id,omitempty" example:"328"`                                                // Movie ID in Kinopoisk database
+	ImdbId           int32    `json:"imdb_id,omitempty" example:"120737"`                                           // Movie ID in IMDB database
+	Ratings          *Ratings `json:"ratings,omitzero"`                                                             // Movie ratings
+}
+
 // Movie model info
 //
 //	@Description	Complete information about movie including most important crew members
 type Movie struct {
-	Id               int32    `json:"id" example:"12163543"`                                                        // Movie ID
-	Type             string   `json:"type" example:"movie"`                                                         // Movie type (movie or series)
-	Status           string   `json:"status" example:"post_production"`                                             // Movie production status
-	Title            string   `json:"title" example:"The Lord of the Rings: The Fellowship of the Ring"`            // Movie title
-	Description      string   `json:"description,omitempty"`                                                        // Movie description
-	ShortDescription string   `json:"short_description,omitempty"`                                                  // Movie short description
-	Tagline          string   `json:"tagline,omitempty"`                                                            // Movie tagline
-	AgeRating        string   `json:"age_rating,omitempty"`                                                         // Movie age rating
-	Runtime          *int32   `json:"runtime,omitempty" example:"178"`                                              // Movie runtime in minutes
-	YearFrom         *int32   `json:"year_from,omitempty" example:"2001"`                                           // Year the movie was first shown
-	ReleaseDate      Date     `json:"release_date,omitzero" swaggertype:"primitive,string" example:"2001-12-19"`    // Movie release date
-	LatestAirDate    Date     `json:"latest_air_date,omitzero" swaggertype:"primitive,string" example:"2001-12-19"` // Latest date on which series have been translated
-	GenreIds         []int32  `json:"genre_ids,omitempty" example:"12,15,16"`                                       // IDs of genres the movie belongs to
-	KpId             int32    `json:"kp_id,omitempty" example:"328"`                                                // Movie ID in Kinopoisk database
-	ImdbId           int32    `json:"imdb_id,omitempty" example:"120737"`                                           // Movie ID in IMDB database
-	Ratings          *Ratings `json:"ratings,omitzero"`                                                             // Movie ratings
-	Crew             *Crew    `json:"crew,omitempty"`                                                               // Movie crew
-}
+	*MovieBase
 
-// MovieSuggestion model info
-//
-//	@Description	Summary information about movie
-type MovieSuggestion struct {
-	Id               int32    `json:"id" example:"12163543"`                                                        // Movie ID
-	Type             string   `json:"type" example:"movie"`                                                         // Movie type (movie or series)
-	Status           string   `json:"status" example:"post_production"`                                             // Movie production status
-	Title            string   `json:"title" example:"The Lord of the Rings: The Fellowship of the Ring"`            // Movie title
-	Description      string   `json:"description,omitempty"`                                                        // Movie description
-	ShortDescription string   `json:"short_description,omitempty"`                                                  // Movie short description
-	Tagline          string   `json:"tagline,omitempty"`                                                            // Movie tagline
-	AgeRating        string   `json:"age_rating,omitempty"`                                                         // Movie age rating
-	Runtime          *int32   `json:"runtime,omitempty" example:"178"`                                              // Movie runtime in minutes
-	YearFrom         *int32   `json:"year_from,omitempty" example:"2001"`                                           // Year the movie was first shown
-	ReleaseDate      Date     `json:"release_date,omitzero" swaggertype:"primitive,string" example:"2001-12-19"`    // Movie release date
-	LatestAirDate    Date     `json:"latest_air_date,omitzero" swaggertype:"primitive,string" example:"2001-12-19"` // Latest date on which series have been translated
-	GenreIds         []int32  `json:"genre_ids,omitempty" example:"12,15,16"`                                       // IDs of genres the movie belongs to
-	KpId             int32    `json:"kp_id,omitempty" example:"328"`                                                // Movie ID in Kinopoisk database
-	ImdbId           int32    `json:"imdb_id,omitempty" example:"120737"`                                           // Movie ID in IMDB database
-	Ratings          *Ratings `json:"ratings,omitzero"`                                                             // Movie ratings
+	Crew *Crew `json:"crew,omitempty"` // Movie crew
 }

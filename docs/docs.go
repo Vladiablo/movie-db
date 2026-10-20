@@ -27,43 +27,15 @@ const docTemplate = `{
                 "summary": "Search movies",
                 "parameters": [
                     {
-                        "enum": [
-                            "movie",
-                            "series"
-                        ],
-                        "type": "string",
-                        "example": "movie",
-                        "description": "Movie type to search for",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 9999,
-                        "minimum": 1,
-                        "type": "integer",
-                        "format": "int32",
-                        "example": 1982,
-                        "description": "Lower bound of the year range for searching movies",
-                        "name": "yearFrom",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 9999,
-                        "minimum": 1,
-                        "type": "integer",
-                        "format": "int32",
-                        "example": 2024,
-                        "description": "Upper bound of the year range for searching movies. Should be greater or equal to yearFrom",
-                        "name": "yearTo",
-                        "in": "query"
-                    },
-                    {
                         "type": "array",
                         "items": {
-                            "type": "integer",
-                            "format": "int32"
+                            "type": "integer"
                         },
                         "collectionFormat": "csv",
+                        "example": [
+                            12,
+                            15
+                        ],
                         "description": "IDs of movie genres to search for",
                         "name": "genreIds",
                         "in": "query"
@@ -72,7 +44,6 @@ const docTemplate = `{
                         "maximum": 10,
                         "minimum": 1,
                         "type": "number",
-                        "format": "float32",
                         "example": 6,
                         "description": "Lower bound of the IMDB rating range for searching movies",
                         "name": "imdbRatingFrom",
@@ -82,7 +53,6 @@ const docTemplate = `{
                         "maximum": 10,
                         "minimum": 1,
                         "type": "number",
-                        "format": "float32",
                         "example": 9.3,
                         "description": "Upper bound of the IMDB rating range for searching movies. Should be greater or equal to imdbRatingFrom",
                         "name": "imdbRatingTo",
@@ -111,6 +81,43 @@ const docTemplate = `{
                         "description": "Sorting direction",
                         "name": "orderDir",
                         "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 15694579,
+                        "description": "ID of a person who should be part of the movies's crew",
+                        "name": "personId",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "movie",
+                            "series"
+                        ],
+                        "type": "string",
+                        "example": "movie",
+                        "description": "Movie type to search for",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 9999,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 1982,
+                        "description": "Lower bound of the year range for searching movies",
+                        "name": "yearFrom",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 9999,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 2024,
+                        "description": "Upper bound of the year range for searching movies. Should be greater or equal to yearFro",
+                        "name": "yearTo",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -119,18 +126,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal.MovieSuggestion"
+                                "$ref": "#/definitions/internal.MovieBase"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/http.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/http.ErrorResponse"
                         }
@@ -165,7 +166,7 @@ const docTemplate = `{
                         "maxLength": 255,
                         "minLength": 2,
                         "type": "string",
-                        "example": "\"game of thrones\"",
+                        "example": "game of thrones",
                         "description": "Search string",
                         "name": "q",
                         "in": "query",
@@ -178,18 +179,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal.MovieSuggestion"
+                                "$ref": "#/definitions/internal.MovieBase"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/http.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/http.ErrorResponse"
                         }
@@ -224,7 +219,6 @@ const docTemplate = `{
                         "maximum": 2147483647,
                         "minimum": 1,
                         "type": "integer",
-                        "format": "int64",
                         "example": 12163543,
                         "description": "Movie ID",
                         "name": "id",
@@ -429,7 +423,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal.MovieSuggestion": {
+        "internal.MovieBase": {
             "description": "Summary information about movie",
             "type": "object",
             "properties": {

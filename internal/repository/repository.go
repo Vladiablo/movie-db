@@ -7,8 +7,8 @@ import (
 
 type Repository interface {
 	GetMovieById(ctx context.Context, id int64) (*internal.Movie, error)
-	GetSuggestions(ctx context.Context, query string) ([]*internal.MovieSuggestion, error)
-	SearchMovies(ctx context.Context, params *MoviesSearchParams) ([]*internal.MovieSuggestion, error)
+	GetSuggestions(ctx context.Context, query string) ([]*internal.MovieBase, error)
+	SearchMovies(ctx context.Context, params *MoviesSearchParams) ([]*internal.MovieBase, error)
 
 	movieRepo()
 }
@@ -22,4 +22,5 @@ type MoviesSearchParams struct {
 	ImdbRatingTo   float32
 	OrderBy        string
 	OrderDir       string
+	PersonId       int32
 }

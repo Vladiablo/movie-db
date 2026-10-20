@@ -112,7 +112,7 @@ definitions:
         example: 2001
         type: integer
     type: object
-  internal.MovieSuggestion:
+  internal.MovieBase:
     description: Summary information about movie
     properties:
       age_rating:
@@ -237,7 +237,6 @@ paths:
       parameters:
       - description: Movie ID
         example: 12163543
-        format: int64
         in: path
         maximum: 2147483647
         minimum: 1
@@ -276,42 +275,18 @@ paths:
     get:
       description: Search movies by criteria
       parameters:
-      - description: Movie type to search for
-        enum:
-        - movie
-        - series
-        example: movie
-        in: query
-        name: type
-        type: string
-      - description: Lower bound of the year range for searching movies
-        example: 1982
-        format: int32
-        in: query
-        maximum: 9999
-        minimum: 1
-        name: yearFrom
-        type: integer
-      - description: Upper bound of the year range for searching movies. Should be
-          greater or equal to yearFrom
-        example: 2024
-        format: int32
-        in: query
-        maximum: 9999
-        minimum: 1
-        name: yearTo
-        type: integer
       - collectionFormat: csv
         description: IDs of movie genres to search for
+        example:
+        - 12
+        - 15
         in: query
         items:
-          format: int32
           type: integer
         name: genreIds
         type: array
       - description: Lower bound of the IMDB rating range for searching movies
         example: 6
-        format: float32
         in: query
         maximum: 10
         minimum: 1
@@ -320,7 +295,6 @@ paths:
       - description: Upper bound of the IMDB rating range for searching movies. Should
           be greater or equal to imdbRatingFrom
         example: 9.3
-        format: float32
         in: query
         maximum: 10
         minimum: 1
@@ -344,6 +318,35 @@ paths:
         in: query
         name: orderDir
         type: string
+      - description: ID of a person who should be part of the movies's crew
+        example: 15694579
+        in: query
+        minimum: 1
+        name: personId
+        type: integer
+      - description: Movie type to search for
+        enum:
+        - movie
+        - series
+        example: movie
+        in: query
+        name: type
+        type: string
+      - description: Lower bound of the year range for searching movies
+        example: 1982
+        in: query
+        maximum: 9999
+        minimum: 1
+        name: yearFrom
+        type: integer
+      - description: Upper bound of the year range for searching movies. Should be
+          greater or equal to yearFro
+        example: 2024
+        in: query
+        maximum: 9999
+        minimum: 1
+        name: yearTo
+        type: integer
       produces:
       - application/json
       responses:
@@ -351,14 +354,10 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/internal.MovieSuggestion'
+              $ref: '#/definitions/internal.MovieBase'
             type: array
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/http.ErrorResponse'
-        "404":
-          description: Not Found
           schema:
             $ref: '#/definitions/http.ErrorResponse'
         "422":
@@ -377,7 +376,7 @@ paths:
       description: Suggest movies with title similar to search string
       parameters:
       - description: Search string
-        example: '"game of thrones"'
+        example: game of thrones
         in: query
         maxLength: 255
         minLength: 2
@@ -391,14 +390,10 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/internal.MovieSuggestion'
+              $ref: '#/definitions/internal.MovieBase'
             type: array
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/http.ErrorResponse'
-        "404":
-          description: Not Found
           schema:
             $ref: '#/definitions/http.ErrorResponse'
         "422":
