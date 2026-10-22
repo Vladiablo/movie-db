@@ -13,16 +13,18 @@ import (
 )
 
 type PgRepository struct {
-	pool *pgxpool.Pool
+	pool      *pgxpool.Pool
+	dbTimeout time.Duration
 }
 
 var _ Repository = (*PgRepository)(nil)
 
-func NewPgRepository(pool *pgxpool.Pool) *PgRepository {
-	return &PgRepository{pool: pool}
+func NewPgRepository(pool *pgxpool.Pool, dbTimeout time.Duration) *PgRepository {
+	return &PgRepository{
+		pool:      pool,
+		dbTimeout: max(0, dbTimeout),
+	}
 }
-
-const dbTimeout = 10 * time.Second
 
 func (r *PgRepository) movieRepo() {}
 
@@ -39,8 +41,12 @@ FROM movies_summary
 WHERE id = $1::int
 `
 
-	ctx, cancel := context.WithTimeout(ctx, dbTimeout)
-	defer cancel()
+	if r.dbTimeout > 0 {
+		c, cancel := context.WithTimeout(ctx, r.dbTimeout)
+		defer cancel()
+
+		ctx = c
+	}
 
 	rows, err := r.pool.Query(ctx, sql, id)
 	if err != nil {
@@ -73,8 +79,12 @@ ORDER BY title <-> $1::text ASC
 LIMIT 10;
 `
 
-	ctx, cancel := context.WithTimeout(ctx, dbTimeout)
-	defer cancel()
+	if r.dbTimeout > 0 {
+		c, cancel := context.WithTimeout(ctx, r.dbTimeout)
+		defer cancel()
+
+		ctx = c
+	}
 
 	rows, err := r.pool.Query(ctx, sql, query)
 	if err != nil {
@@ -112,8 +122,12 @@ WHERE
     AND ($7::int = 0 OR crew @@ $7::text::query_int)
 `
 
-	ctx, cancel := context.WithTimeout(ctx, dbTimeout)
-	defer cancel()
+	if r.dbTimeout > 0 {
+		c, cancel := context.WithTimeout(ctx, r.dbTimeout)
+		defer cancel()
+
+		ctx = c
+	}
 
 	orderBy := params.OrderBy
 	if orderBy == "imdb_rating" {
