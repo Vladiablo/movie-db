@@ -32,3 +32,38 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.14.0
+
+  docker:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Set up Docker Buildx
+        id: setup-buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build docker image
+        id: build-image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          context: .
+          outputs: type=docker,dest=docker-images/moviedb-api-${{ github.sha }}.tar
+          push: false
+          tags: vladiablo/moviedb-api:latest,vladiablo/moviedb-api:${{ github.sha }}
+
+      - name: Compress docker image
+        if: ${{ !cancelled() && hashFiles(format('docker-images/moviedb-api-{0}.tar', github.sha)) != '' }}
+        shell: bash
+        run: gzip docker-images/moviedb-api-${{ github.sha }}.tar
+
+      - name: Upload docker image artifact
+        if: ${{ !cancelled() && hashFiles(format('docker-images/moviedb-api-{0}.tar.gz', github.sha)) != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          archive: false
+          name: moviedb-api-${{ github.sha }}.tar.gz
+          path: docker-images/moviedb-api-${{ github.sha }}.tar.gz

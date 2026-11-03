@@ -13,34 +13,51 @@ import (
 	"github.com/labstack/echo/v5/middleware"
 )
 
-type Server struct {
-	echo *echo.Echo
-	addr string
+const DefaultServerAddr = ":8080"
 
-	logger *slog.Logger
+type Server struct {
+	echo            *echo.Echo
+	addr            string
+	gracefulTimeout time.Duration
 }
 
-func NewServer(addr string, logger *slog.Logger) *Server {
+type ServerConfig struct {
+	Addr                    string
+	Timeout                 time.Duration
+	GracefulShutdownTimeout time.Duration
+
+	Validator echo.Validator
+	Logger    *slog.Logger
+}
+
+func NewServer(cfg *ServerConfig) *Server {
 	e := echo.NewWithConfig(echo.Config{
-		Logger:           logger,
+		Logger:           cfg.Logger,
 		HTTPErrorHandler: httpErrorHandler,
 	})
 
-	e.Use(middleware.Recover())
-	e.Use(middleware.ContextTimeout(30 * time.Second))
+	addr := cfg.Addr
+	if addr == "" {
+		addr = DefaultServerAddr
+	}
 
-	e.Validator = NewCustomValidator()
+	e.Use(middleware.Recover())
+
+	if cfg.Timeout > 0 {
+		e.Use(middleware.ContextTimeout(cfg.Timeout))
+	}
+
+	e.Validator = cfg.Validator
 
 	return &Server{
-		echo: e,
-		addr: addr,
-
-		logger: logger,
+		echo:            e,
+		addr:            addr,
+		gracefulTimeout: max(0, cfg.GracefulShutdownTimeout),
 	}
 }
 
-func (s *Server) Start(ctx context.Context, gracefulTimeout time.Duration) error {
-	s.logger.Info("Starting HTTP server...", slog.String("addr", s.addr))
+func (s *Server) Start(ctx context.Context) error {
+	s.echo.Logger.Info("Starting HTTP server...", slog.String("address", s.addr))
 
 	// Note: lc.Listen doesn't respect cancelled context, so we do our own check
 	if ctx.Err() != nil {
@@ -56,24 +73,24 @@ func (s *Server) Start(ctx context.Context, gracefulTimeout time.Duration) error
 	go func() {
 		<-ctx.Done()
 
-		s.logger.Info("Shutting down HTTP server...")
+		s.echo.Logger.Info("Shutting down HTTP server...")
 	}()
 
 	sc := echo.StartConfig{
 		Address:         s.addr,
 		HideBanner:      true,
 		Listener:        listener,
-		GracefulTimeout: gracefulTimeout,
+		GracefulTimeout: s.gracefulTimeout,
 	}
 
 	if err := sc.Start(ctx, s.echo); err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
-			s.logger.Info("HTTP server stopped")
+			s.echo.Logger.Info("HTTP server stopped")
 
 			return nil
 		}
 
-		s.logger.Error("Failed to start HTTP server", slog.Any("error", err))
+		s.echo.Logger.Error("Failed to start HTTP server", slog.Any("error", err))
 
 		return fmt.Errorf("failed to start HTTP server: %w", err)
 	}
